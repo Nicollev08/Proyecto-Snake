@@ -10,46 +10,54 @@ import javax.sound.sampled.*;
 
 public class SnakeGameApp {
     public static void main(String[] args) {
-        
+        // Reproduce un sonido inicial al comenzar la aplicación
         playSound("SOUNDS/SonidoInicio.wav", false);
 
+        // Configuración de la ventana principal del juego
         JFrame frame = new JFrame("Juego Snake");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(700, 700);
-        frame.setLocationRelativeTo(null);
+        frame.setLocationRelativeTo(null); // Centrar la ventana en la pantalla
 
+        // Crear un panel con un diseño de cuadrícula para los botones del menú
         JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(3, 1));
 
+        // Crear botones para las opciones del menú
         JButton btnClasic = new JButton("Modo clasico");
         JButton btn2Players = new JButton("Modo dos jugadores");
         JButton btnSalir = new JButton("Salir");
 
-        btnClasic.addActionListener(e -> startGame(frame, 1));
-        btn2Players.addActionListener(e -> startGame(frame, 2));
-        btnSalir.addActionListener(e -> {
+        // Asignar acciones a los botones
+        btnClasic.addActionListener(e -> startGame(frame, 1)); // Inicia el juego en modo clásico
+        btn2Players.addActionListener(e -> startGame(frame, 2)); // Inicia el juego en modo dos jugadores
+        btnSalir.addActionListener(e -> { // Sale del juego
             JOptionPane.showMessageDialog(frame, "¡Gracias por jugar!");
             System.exit(0);
         });
 
+        // Agregar los botones al panel
         panel.add(btnClasic);
         panel.add(btn2Players);
         panel.add(btnSalir);
 
+        // Agregar el panel a la ventana principal y mostrarla
         frame.add(panel);
         frame.setVisible(true);
     }
 
+    // Método para iniciar el juego
     private static void startGame(JFrame frame, int players) {
-        playSound("SOUNDS/SonidoJuego.wav", true);
-        SnakeGame game = new SnakeGame(700, 600, players, frame);
-        frame.getContentPane().removeAll();
-        frame.getContentPane().add(game);
-        frame.revalidate();
-        frame.repaint();
-        game.requestFocus();
+        playSound("SOUNDS/SonidoJuego.wav", true); // Reproduce música de fondo del juego
+        SnakeGame game = new SnakeGame(700, 600, players, frame); // Crear el juego con la configuración especificada
+        frame.getContentPane().removeAll(); // Limpiar el contenido de la ventana
+        frame.getContentPane().add(game); // Agregar el panel del juego
+        frame.revalidate(); // Actualizar la ventana
+        frame.repaint(); // Repintar la ventana
+        game.requestFocus(); // Asegurarse de que el panel del juego reciba eventos de teclado
     }
 
+    // Método para reproducir sonidos
     public static void playSound(String soundFile, boolean loop) {
         try {
             File soundPath = new File(soundFile);
@@ -58,7 +66,7 @@ public class SnakeGameApp {
                 Clip clip = AudioSystem.getClip();
                 clip.open(audioInput);
                 if (loop) {
-                    clip.loop(Clip.LOOP_CONTINUOUSLY);
+                    clip.loop(Clip.LOOP_CONTINUOUSLY); // Repetir el sonido si es necesario
                 } else {
                     clip.start();
                 }
@@ -80,14 +88,15 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     class Player {
-        Tile head;
-        ArrayList<Tile> body;
-        int velocityX, velocityY, growAmount;
+        Tile head; // Posición de la cabeza de la serpiente
+        ArrayList<Tile> body; // Segmentos del cuerpo
+        int velocityX, velocityY; // Velocidad de movimiento (dirección)
+        int growAmount; // Cantidad de segmentos por crecer
 
         Player(int startX, int startY) {
-            head = new Tile(startX, startY);
-            body = new ArrayList<>();
-            velocityX = 1;
+            head = new Tile(startX, startY); // Inicializa la cabeza en una posición
+            body = new ArrayList<>(); // Inicializa el cuerpo vacío
+            velocityX = 1; // Comienza moviéndose hacia la derecha
             velocityY = 0;
         }
     }
@@ -106,23 +115,23 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
     Image headImage2, bodyImage2, fruitImage2;
 
     SnakeGame(int boardWidth, int boardHeight, int players, JFrame frame) {
-
-        this.players = players;
-        this.boardWidth = boardWidth;
-        this.boardHeight = boardHeight;
+        this.players = players; // Número de jugadores
+        this.boardWidth = boardWidth; // Ancho del tablero
+        this.boardHeight = boardHeight; // Altura del tablero
         this.frame = frame;
+
         setPreferredSize(new Dimension(boardWidth, boardHeight));
-        setBackground(Color.black);
-        addKeyListener(this);
-        setFocusable(true);
+        setBackground(Color.black); // Fondo negro del tablero
+        addKeyListener(this); // Agregar soporte para teclas
+        setFocusable(true); // Asegurar que pueda recibir eventos de teclado
 
         try {
-            // Cargar imágenes del jugador 1
+            // Cargar imágenes de comida, cabeza y cuerpo de la serpiente
             fruitImage = ImageIO.read(new File("IMG/apple.png"));
             headImage = ImageIO.read(new File("IMG/head.png"));
             bodyImage = ImageIO.read(new File("IMG/body.png"));
 
-            // Cargar imágenespara el modo de juego 2
+            // Cargar imágenes adicionales para el modo de 2 jugadores
             fruitImage2 = ImageIO.read(new File("IMG/mango.png"));
             headImage2 = ImageIO.read(new File("IMG/head2.png"));
             bodyImage2 = ImageIO.read(new File("IMG/body2.png"));
@@ -130,43 +139,38 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
             e.printStackTrace();
         }
 
-        player1 = new Player(10, 10);
+        player1 = new Player(10, 10); // Inicializa el primer jugador
         if (players == 2) {
-            player2 = new Player(5, 5);
+            player2 = new Player(5, 5); // Inicializa el segundo jugador si aplica
         }
 
-        food = new Tile(10, 10);
+        food = new Tile(10, 10); // Posición inicial de la comida
         random = new Random();
-        placeFood();
+        placeFood(); // Coloca la comida en una posición aleatoria
 
-        gameLoop = new Timer(100, this);
+        gameLoop = new Timer(100, this); // Bucle principal del juego
         gameLoop.start();
     }
 
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        draw(g);
+        draw(g); // Llama al método personalizado para dibujar
     }
 
     public void draw(Graphics g) {
-
-        // Dibujar el marco amarillo alrededor de la cuadrícula
+        // Dibujar marco alrededor del tablero
         g.setColor(Color.yellow);
-        int gridX = 2;
-        int gridY = 73; // Ajuste para el desplazamiento vertical
-        int gridWidth = (boardWidth / tileSize) * tileSize;
-        int gridHeight = (boardHeight / tileSize) * tileSize;
-        g.drawRect(gridX, gridY, gridWidth, gridHeight);
+        g.drawRect(2, 73, (boardWidth / tileSize) * tileSize, (boardHeight / tileSize) * tileSize);
 
-        // Dibujar la cuadrícula
-        g.setColor(Color.gray); // Cambiar color si es necesario
+        // Dibujar cuadrícula
+        g.setColor(Color.gray);
         for (int i = 0; i < boardWidth / tileSize; i++) {
-            g.drawLine(i * tileSize, 75, i * tileSize, boardHeight * 10); // Ajuste vertical
-            g.drawLine(0, i * tileSize + 75, boardWidth, i * tileSize + 75); // Ajuste horizontal
+            g.drawLine(i * tileSize, 75, i * tileSize, boardHeight * 10); // Líneas verticales
+            g.drawLine(0, i * tileSize + 75, boardWidth, i * tileSize + 75); // Líneas horizontales
         }
 
-        // Dibujar la comida y los jugadores
+        // Dibujar comida y jugadores
         Image currentFruitImage = (players == 2) ? fruitImage2 : fruitImage;
         g.drawImage(currentFruitImage, food.x * tileSize, food.y * tileSize + 75, tileSize, tileSize, this);
         drawPlayer(g, player1, headImage, bodyImage);
@@ -191,7 +195,6 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
                 g.drawString("Player 2 Score: " + player2.body.size(), tileSize * 6, tileSize + 13);
             }
         }
-
     }
 
     // Mostrar "GameOver" cuando el jugador pierda
@@ -220,148 +223,181 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
     }
 
     private void drawPlayer(Graphics g, Player player, Image headImg, Image bodyImg) {
+        // Dibuja la cabeza del jugador en su posición actual
         g.drawImage(headImg, player.head.x * tileSize, player.head.y * tileSize + 75, tileSize, tileSize, this);
+
+        // Itera sobre las partes del cuerpo del jugador y las dibuja
         for (Tile part : player.body) {
             g.drawImage(bodyImg, part.x * tileSize, part.y * tileSize + 75, tileSize, tileSize, this);
         }
     }
 
     public void placeFood() {
+        // Genera una posición aleatoria dentro de los límites del tablero para la
+        // comida
         food.x = random.nextInt(boardWidth / tileSize);
         food.y = random.nextInt(boardHeight / tileSize);
     }
 
     public static void playSound(String soundFile) {
         try {
-            File soundPath = new File(soundFile);
+            File soundPath = new File(soundFile); // Ruta al archivo de sonido
             if (soundPath.exists()) {
+                // Leer el archivo de sonido y configurarlo para reproducir
                 AudioInputStream audioInput = AudioSystem.getAudioInputStream(soundPath);
                 Clip clip = AudioSystem.getClip();
                 clip.open(audioInput);
-                clip.start();
+                clip.start(); // Comienza la reproducción
             } else {
                 System.out.println("Archivo de sonido no encontrado");
             }
         } catch (Exception ex) {
-            ex.printStackTrace();
+            ex.printStackTrace(); // Imprime cualquier error que ocurra
         }
     }
 
     public void move() {
+        // Mueve al jugador 1
         movePlayer(player1);
+
+        // Si hay un segundo jugador, también lo mueve
         if (player2 != null) {
             movePlayer(player2);
         }
 
-        // Verificar colisiones con la comida
+        // Verifica si el jugador 1 colisiona con la comida
         if (collision(player1.head, food)) {
-            player1.growAmount++;
-            placeFood();
-            playSound("SOUNDS/SonidoComer.wav");
+            player1.growAmount++; // Incrementa el tamaño que debe crecer la serpiente
+            placeFood(); // Genera nueva comida
+            playSound("SOUNDS/SonidoComer.wav"); // Reproduce el sonido de comer
         }
+
+        // Verifica si el jugador 2 (si existe) colisiona con la comida
         if (player2 != null && collision(player2.head, food)) {
             player2.growAmount++;
             placeFood();
             playSound("SOUNDS/SonidoComer.wav");
         }
 
-        // Comprobar colisiones que terminan el 
-        if (collisionWithBody(player1.head, player1.body) || player1.head.x < 0
-                || player1.head.x >= boardWidth / tileSize
-                || player1.head.y < 0 || player1.head.y >= boardHeight / tileSize) {
+        // Verifica si hay colisiones que terminan el juego
+        if (collisionWithBody(player1.head, player1.body) // Colisión con su propio cuerpo
+                || player1.head.x < 0 || player1.head.x >= boardWidth / tileSize // Fuera del tablero horizontal
+                || player1.head.y < 0 || player1.head.y >= boardHeight / tileSize) { // Fuera del tablero vertical
+            gameOver = true; // Termina el juego
+        }
+
+        // Colisiones para el jugador 2
+        if (player2 != null && (collisionWithBody(player2.head, player2.body) // Colisión con su propio cuerpo
+                || player2.head.x < 0 || player2.head.x >= boardWidth / tileSize // Fuera del tablero horizontal
+                || player2.head.y < 0 || player2.head.y >= boardHeight / tileSize)) { // Fuera del tablero vertical
             gameOver = true;
         }
-        if (player2 != null && (collisionWithBody(player2.head, player2.body) || player2.head.x < 0
-                || player2.head.x >= boardWidth / tileSize
-                || player2.head.y < 0 || player2.head.y >= boardHeight / tileSize)) {
-            gameOver = true;
-        }
-        if (player2 != null && (collision(player1.head, player2.head) || collisionWithBody(player1.head, player2.body)
-                || collisionWithBody(player2.head, player1.body))) {
+
+        // Colisiones entre jugadores (solo en modo 2 jugadores)
+        if (player2 != null && (collision(player1.head, player2.head) // Colisión de cabezas
+                || collisionWithBody(player1.head, player2.body) // Jugador 1 colisiona con el cuerpo del jugador 2
+                || collisionWithBody(player2.head, player1.body))) { // Jugador 2 colisiona con el cuerpo del jugador 1
             gameOver = true;
         }
     }
 
     public void movePlayer(Player player) {
+        // Calcula las nuevas coordenadas de la cabeza del jugador basándose en la
+        // dirección actual
         int newX = player.head.x + player.velocityX;
         int newY = player.head.y + player.velocityY;
 
-        // Verificar que la cabeza no se salga de los límites de la cuadrícula
+        // Verifica que la cabeza del jugador no se salga de los límites de la
+        // cuadrícula
         if (newX < 0 || newX >= boardWidth / tileSize || newY < 0 || newY >= boardHeight / tileSize) {
-            gameOver = true;
+            gameOver = true; // Termina el juego si la cabeza se sale de los límites
             return;
         }
 
-        // Mover las partes del cuerpo
+        // Mueve las partes del cuerpo del jugador
         for (int i = player.body.size() - 1; i >= 1; i--) {
-            player.body.set(i, player.body.get(i - 1));
+            player.body.set(i, player.body.get(i - 1)); // Desplaza cada segmento hacia la posición del segmento
+                                                        // anterior
         }
+
+        // Si la serpiente tiene partes, actualiza la posición del primer segmento a la
+        // antigua posición de la cabeza
         if (player.body.size() > 0) {
             player.body.set(0, new Tile(player.head.x, player.head.y));
         }
+
+        // Actualiza la posición de la cabeza con las nuevas coordenadas calculadas
         player.head = new Tile(newX, newY);
 
-        // Hacer crecer la serpiente cuando come comida
+        // Verifica si el jugador debe crecer
         if (player.growAmount > 0) {
-            player.body.add(new Tile(-1, -1)); // Añadir una nueva parte al cuerpo
-            player.growAmount--;
+            player.body.add(new Tile(-1, -1)); // Añade una nueva parte al cuerpo en una posición temporal
+            player.growAmount--; // Reduce la cantidad pendiente de crecimiento
         }
     }
 
     public boolean collision(Tile a, Tile b) {
+        // Comprueba si dos "Tiles" ocupan la misma posición
         return a.x == b.x && a.y == b.y;
     }
 
     public boolean collisionWithBody(Tile head, ArrayList<Tile> body) {
+        // Recorre cada segmento del cuerpo para comprobar si la cabeza colisiona con
+        // alguno
         for (Tile part : body) {
             if (collision(head, part)) {
-                return true;
+                return true; // Retorna verdadero si hay colisión
             }
         }
-        return false;
+        return false; // No hubo colisión
     }
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        if (!gameOver) {
-            move();
-            repaint();
+        if (!gameOver) { // Solo actúa si el juego no ha terminado
+            move(); // Actualiza la lógica del juego (probablemente mueve todos los jugadores y
+                    // procesa eventos)
+            repaint(); // Redibuja el tablero para reflejar los cambios
         }
     }
 
     @Override
     public void keyPressed(KeyEvent e) {
-        int key = e.getKeyCode();
-        if (key == KeyEvent.VK_UP && player1.velocityY == 0) {
+        int key = e.getKeyCode(); // Obtiene el código de la tecla presionada
+
+        // Controla el movimiento del primer jugador
+        if (key == KeyEvent.VK_UP && player1.velocityY == 0) { // Movimiento hacia arriba
             player1.velocityX = 0;
             player1.velocityY = -1;
         }
-        if (key == KeyEvent.VK_DOWN && player1.velocityY == 0) {
+        if (key == KeyEvent.VK_DOWN && player1.velocityY == 0) { // Movimiento hacia abajo
             player1.velocityX = 0;
             player1.velocityY = 1;
         }
-        if (key == KeyEvent.VK_LEFT && player1.velocityX == 0) {
+        if (key == KeyEvent.VK_LEFT && player1.velocityX == 0) { // Movimiento hacia la izquierda
             player1.velocityX = -1;
             player1.velocityY = 0;
         }
-        if (key == KeyEvent.VK_RIGHT && player1.velocityX == 0) {
+        if (key == KeyEvent.VK_RIGHT && player1.velocityX == 0) { // Movimiento hacia la derecha
             player1.velocityX = 1;
             player1.velocityY = 0;
         }
+
+        // Controla el movimiento del segundo jugador (si está habilitado)
         if (player2 != null) {
-            if (key == KeyEvent.VK_W && player2.velocityY == 0) {
+            if (key == KeyEvent.VK_W && player2.velocityY == 0) { // Movimiento hacia arriba
                 player2.velocityX = 0;
                 player2.velocityY = -1;
             }
-            if (key == KeyEvent.VK_S && player2.velocityY == 0) {
+            if (key == KeyEvent.VK_S && player2.velocityY == 0) { // Movimiento hacia abajo
                 player2.velocityX = 0;
                 player2.velocityY = 1;
             }
-            if (key == KeyEvent.VK_A && player2.velocityX == 0) {
+            if (key == KeyEvent.VK_A && player2.velocityX == 0) { // Movimiento hacia la izquierda
                 player2.velocityX = -1;
                 player2.velocityY = 0;
             }
-            if (key == KeyEvent.VK_D && player2.velocityX == 0) {
+            if (key == KeyEvent.VK_D && player2.velocityX == 0) { // Movimiento hacia la derecha
                 player2.velocityX = 1;
                 player2.velocityY = 0;
             }
@@ -370,22 +406,24 @@ class SnakeGame extends JPanel implements ActionListener, KeyListener {
 
     @Override
     public void keyReleased(KeyEvent e) {
+        // Método vacío (sin implementación) para manejar cuando se libera una tecla
     }
 
     @Override
     public void keyTyped(KeyEvent e) {
+        // Método vacío (sin implementación) para manejar cuando se escribe un carácter
     }
 
     public void restartGame() {
-        player1 = new Player(10, 10);
+        // Reinicia el estado del juego
+        player1 = new Player(10, 10); // Inicializa el primer jugador
         if (players == 2) {
-            player2 = new Player(5, 5);
+            player2 = new Player(5, 5); // Inicializa el segundo jugador si hay dos
         }
-        food = new Tile(10, 10);
-        placeFood();
-        gameOver = false;
-        repaint();
-        gameLoop.start();
+        food = new Tile(10, 10); // Posición inicial de la comida
+        placeFood(); // Coloca la comida en un lugar aleatorio válido
+        gameOver = false; // Reinicia el estado de "fin del juego"
+        repaint(); // Redibuja el tablero inicial
+        gameLoop.start(); // Reinicia el bucle del juego
     }
-
 }
